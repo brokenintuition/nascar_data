@@ -15,6 +15,7 @@ def apply_column_fixes(raw_filepath, output_filepath):
 
     df['Date'] = pd.to_datetime(df['Date'], format='%m/%d/%y')
     df['StageAdjustCautions'] = df.apply(stage_adjust_cautions, axis=1)
+    df['TrackType'] = df.apply(get_track_type, axis=1)
 
     df.to_csv(output_filepath)
 
@@ -35,6 +36,18 @@ def stage_adjust_cautions(row):
 
     # everything else has 3 stages (again, unless rain-shortened)
     return base_cautions - 2
+
+def get_track_type(row):
+    if row['TrackSurface'] == 'R':
+        return 'Road'
+
+    track_length = row['TrackLength']
+
+    if track_length < 1:
+        return 'Short'
+    if track_length <= 2:
+        return 'Intermediate'
+    return 'Superspeedway'
 
 
 if __name__ == '__main__':
