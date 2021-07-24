@@ -7,6 +7,7 @@ import argparse
 import logging
 import pandas as pd
 from itertools import product
+from datetime import date
 
 base_url = 'https://www.racing-reference.info/season-stats/{year}/{series}/'
 output_format = '{series}_{year}_season_v1.csv'
@@ -56,7 +57,9 @@ def retrieve_season_data(url):
         for i in range(num_columns):
             row_data[column_names[i]] = cells[i].text
 
-        # todo: scheduled distance isn't realy "raw", should move this to another processing step
+        # scheduled distance isn't really raw data since it's not in the table on the main site
+        # but doing this here so the translation/cleaning scripts don't need to go out to the web.
+        # May change this at some point if I start pulling the entire detials page
         row_data['ScheduledLaps'] = scheduled_laps
         row_data['ScheduledMiles'] = scheduled_miles
         row_data['DetailsUrl'] = details_url
@@ -76,7 +79,10 @@ def download_seasons(years, series_names, output_dir):
         series = pair[1]
         file_path = os.path.join(output_dir, output_format.format(year=year, series=series))
         
-        if os.path.exists(file_path):
+        # want to keep updating current year to pick up new races since last run
+        is_current_year = date.today().year == year
+
+        if os.path.exists(file_path) and not is_current_year:
             logging.info('File %s exists, skipping', file_path)
             continue
 
